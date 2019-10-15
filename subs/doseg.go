@@ -60,13 +60,13 @@ func Segepoch(a string) StructSegments {
 		//		prevpos      = 0
 		segments []StructSegments
 	)
+	mapGuessword = make(map[string]float64)
 
 	reASCII := regexp.MustCompile(restrAlphabet)
 	if reASCII.MatchString(a) { //純英數字
 		return neednotSeg(a)
 	}
 
-	mapGuessword = make(map[string]float64)
 	segments = make([]StructSegments, 1)
 	var currentEpoch StructSegments
 
@@ -197,7 +197,7 @@ func neednotSeg(a string) StructSegments {
 		// fmt.Println("Select Error=", errSelect)
 		if errSelect == nil { //Guessed
 			mapGuessword[a] = math.Log10(float64(freq)) + 1.0
-			fmt.Println("finding", a, "got freq=", freq, "SCORE =", mapGuessword[a])
+			//			fmt.Println("finding", a, "got freq=", freq, "SCORE =", mapGuessword[a])
 		} else {
 			mapGuessword[a] = 1.0
 		}
