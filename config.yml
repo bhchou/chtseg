@@ -1,0 +1,11 @@
+server:
+  port: 3306
+  type: "tcp"
+  socket:
+  ip: "127.0.0.1"
+
+database:
+  dbname: "cloud"
+  dbuser: "pi"
+  dbpassword: "0955raspberry"
+
