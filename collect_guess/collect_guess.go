@@ -17,6 +17,7 @@ var (
 	flags                 []cli.Flag
 	csvfile, stopwordfile string
 	giLines               = 0
+	mysqlconnstr          = ""
 	restrEngCJK           = "^([\x41-\x5A\x61-\x7A]*)([\u3400-\u4DBF\u4E00-\u9FFF]{1,7})$"
 )
 
@@ -42,6 +43,13 @@ func init() {
 		cli.BoolFlag{
 			Name:  "test, t",
 			Usage: "Just test, no write to DB, will output info regradless -t",
+		},
+		cli.StringFlag{
+			Name:        "with-mysql, m",
+			Value:       "",
+			Usage:       "mysql connect string in \"username:password@conntype(ip:port)/db\" format(\" quoted)",
+			Required:    true,
+			Destination: &mysqlconnstr,
 		},
 	}
 }
@@ -104,6 +112,10 @@ func cliAction(c *cli.Context) error {
 				return cli.NewExitError("platform must be pchome/shopee/ruten", 3)
 			} */
 
+	if len(mysqlconnstr) == 0 {
+		return cli.NewExitError("db connect string not set", 1)
+	}
+
 	return nil
 }
 
@@ -114,8 +126,9 @@ func main() {
 		os.Exit(1)
 	}
 	seg.InfoOut("get", csvfile)
+	seg.InitDB(mysqlconnstr)
 
-	if seg.Err != nil {
+	if seg.Err == nil {
 		defer seg.CloseDB()
 	} else {
 		log.Fatal(seg.Err)

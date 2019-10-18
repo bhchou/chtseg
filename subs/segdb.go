@@ -31,12 +31,14 @@ var (
 	gdb                          *sql.DB
 	gstmtInsWord, gstmtInsIgnore *sql.Stmt
 	gstmtUpdWord, gstmtUpdIgnore *sql.Stmt
-	gstrConnect                  = "pi:0955raspberry@tcp(127.0.0.1:3306)/cloud"
+	gstrConnect                  = ""
+	// "pi:0955raspberry@tcp(127.0.0.1:3306)/cloud"
 	Verbose                      = false
 	Test                         = false
 )
 
-func init() {
+func InitDB(strConnect string) {
+	gstrConnect = strConnect
 	State, Err = prepareDB()
 	fmt.Println("MYSQL connect state, error=", State, Err)
 }

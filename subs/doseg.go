@@ -37,7 +37,7 @@ type StructGuessword struct {
 // instead using the following map for a try
 
 var (
-	restrAlphabet = "^[\x22-\x7e]+$"
+	restrAlphabet = "^[\x22-\x7e\u3000\uFF01-\uFF5E\u2018\u2019]+$"
 	maxWordLen    = 5
 	mapGuessword  map[string]float64
 )
@@ -63,6 +63,7 @@ func Segepoch(a string) StructSegments {
 	mapGuessword = make(map[string]float64)
 
 	reASCII := regexp.MustCompile(restrAlphabet)
+	InfoOut(fmt.Sprintf("quoted string: %+q\n", a))
 	if reASCII.MatchString(a) { //純英數字
 		return neednotSeg(a)
 	}
@@ -87,7 +88,7 @@ func Segepoch(a string) StructSegments {
 				}
 			}
 		}
-		fmt.Println("Parse: ", current)
+		InfoOut("Parse: ", current)
 		currentEpoch.Current = current
 		currentEpoch.Guessedwords = make(map[string]float64)
 		currentEpoch.Score = 0.0
@@ -96,7 +97,7 @@ func Segepoch(a string) StructSegments {
 
 		tobeGuessed = current
 		for i := 0; i < 7 && i <= wpos; i++ { //from current back to previous 7 stats if any
-			fmt.Println("wpos=", wpos, "i=", i)
+			InfoOut("wpos=", wpos, "i=", i)
 			/*prevpos = wpos - i - 1
 			if prevpos < 0 {
 				break
@@ -104,19 +105,20 @@ func Segepoch(a string) StructSegments {
 			if i > 0 {
 				tobeGuessed = StringJoin(segments[wpos-i].Current, tobeGuessed)
 			}
-			fmt.Println("Guess:", tobeGuessed)
+			InfoOut("Guess:", tobeGuessed)
 			if _, exist := mapGuessword[tobeGuessed]; !exist {
 				errSelect := gdb.QueryRow("select freq from guess_words where guess = ?", fnMysqlRealEscapeString(tobeGuessed)).Scan(&freq)
 				// fmt.Println("Select Error=", errSelect)
 				if errSelect == nil { //Guessed
 					mapGuessword[tobeGuessed] = math.Log10(float64(freq))*float64(i+1) + 1.0 //i+1 才是正確的“字“數
-					fmt.Println("finding", tobeGuessed, "got freq=", freq, "SCORE =", mapGuessword[tobeGuessed])
+					InfoOut("finding", tobeGuessed, "got freq=", freq, "SCORE =", mapGuessword[tobeGuessed])
 				} else if i == 0 {
 					mapGuessword[tobeGuessed] = 1.0
 				} else {
 					mapGuessword[tobeGuessed] = 0.0
 				}
 			}
+			//		fmt.Println("map", mapGuessword)
 			if wpos == 0 {
 				currentEpoch.Score = mapGuessword[tobeGuessed]
 				currentEpoch.Wordcnt = 1
@@ -128,7 +130,9 @@ func Segepoch(a string) StructSegments {
 			} else {
 				if i == 0 {
 					prevEpoch := segments[wpos-i-1]
-					currentEpoch.Score = (prevEpoch.Score*float64(prevEpoch.Wordcnt) + mapGuessword[tobeGuessed]) / float64(prevEpoch.Wordcnt+1)
+					// currentEpoch.Score = (prevEpoch.Score*float64(prevEpoch.Wordcnt) + mapGuessword[tobeGuessed]) / float64(prevEpoch.Wordcnt+1)
+					/* try to degrade wordcount effect */
+					currentEpoch.Score = (prevEpoch.Score*math.Sqrt(float64(prevEpoch.Wordcnt)) + mapGuessword[tobeGuessed]) / math.Sqrt(float64(prevEpoch.Wordcnt+1))
 					currentEpoch.Wordcnt = prevEpoch.Wordcnt + 1
 					currentEpoch.SegSentence = StringJoin(prevEpoch.SegSentence, "\t", tobeGuessed)
 					//////// copy (currentEpoch.Guessedwords, prevEpoch.Guessedwords)
@@ -153,7 +157,10 @@ func Segepoch(a string) StructSegments {
 					}
 				} else {
 					prevEpoch := segments[wpos-i-1]
-					tempScore := (prevEpoch.Score*float64(prevEpoch.Wordcnt) + mapGuessword[tobeGuessed]) / float64(prevEpoch.Wordcnt+1)
+					// tempScore := (prevEpoch.Score*float64(prevEpoch.Wordcnt) + mapGuessword[tobeGuessed]) / float64(prevEpoch.Wordcnt+1)
+					/* try to degrade wordcount effect */
+					tempScore := (prevEpoch.Score*math.Sqrt(float64(prevEpoch.Wordcnt)) + mapGuessword[tobeGuessed]) / math.Sqrt(float64(prevEpoch.Wordcnt+1))
+					InfoOut(fmt.Sprintf("P=%#v, to=%s, m=%#v\n", prevEpoch, tobeGuessed, mapGuessword[tobeGuessed]))
 					if tempScore > currentEpoch.Score {
 						currentEpoch.Wordcnt = prevEpoch.Wordcnt + 1
 						currentEpoch.Score = tempScore
@@ -170,14 +177,14 @@ func Segepoch(a string) StructSegments {
 					}
 				}
 			}
-			fmt.Printf("CURRENT = %#v\n", currentEpoch)
+			InfoOut(fmt.Sprintf("CURRENT = %#v\n", currentEpoch))
 		}
 		if wpos == 0 {
 			segments[0] = currentEpoch
 		} else {
 			segments = append(segments, currentEpoch)
 		}
-		fmt.Printf("SEGMENT = %#v\n", segments)
+		InfoOut(fmt.Sprintf("SEGMENT = %#v\n", segments))
 		wpos++
 	}
 	return segments[wpos-1]

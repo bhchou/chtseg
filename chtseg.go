@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	cnf "chtseg/config"
 	seg "chtseg/subs"
 	"encoding/json"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/spf13/viper"
 	"github.com/urfave/cli"
 )
 
@@ -36,6 +38,10 @@ var (
 	app            = cli.NewApp()
 	flags          []cli.Flag
 	batchfile      = ""
+	mysqlconnstr   = ""
+	confconnstr    = ""
+	nohelp         = false
+	cf             cnf.Configurations
 )
 
 func (x strInputs) String() string {
@@ -58,7 +64,34 @@ func init() {
 			Name:  "test, t",
 			Usage: "Just test, no segmentation, will output info regardless -v",
 		},
+		cli.StringFlag{
+			Name:  "with-mysql, m",
+			Value: "",
+			Usage: "mysql connect string in \"username:password@conntype(ip:port)/db\" format(\" quoted)",
+			//			Required:    true,
+			Destination: &mysqlconnstr,
+		},
 	}
+
+	// Set the file name of the configurations file
+	viper.SetConfigName("config")
+
+	// Set the path to look for the configurations file
+	viper.AddConfigPath(".")
+
+	// Enable VIPER to read Environment Variables
+	//viper.AutomaticEnv()
+
+	viper.SetConfigType("yml")
+
+	err1 := viper.ReadInConfig()
+	if err1 == nil {
+		err := viper.Unmarshal(&cf)
+		if err == nil {
+			confconnstr = fmt.Sprintf("%s:%s@%s(%s:%d)/%s", cf.Database.DBUser, cf.Database.DBPassword, cf.Server.Type, cf.Server.IP, cf.Server.Port, cf.Database.DBName)
+		}
+	}
+
 }
 
 func cliInfo() {
@@ -72,8 +105,12 @@ func cliInfo() {
 }
 
 func cliAction(c *cli.Context) error {
-	if len(batchfile) > 0 && !fileExists(batchfile) {
-		return cli.NewExitError("batch file to be segmented does not exist", 5)
+	if len(batchfile) > 0 {
+		if !fileExists(batchfile) {
+			return cli.NewExitError("batch file to be segmented does not exist", 5)
+		} else {
+			seg.Verbose = false
+		}
 	}
 	if c.Bool("v") {
 		seg.Verbose = true
@@ -82,6 +119,10 @@ func cliAction(c *cli.Context) error {
 		seg.Verbose = true
 		seg.Test = true
 	}
+	/* if len(mysqlconnstr) == 0 {
+		return cli.NewExitError("db connect string not set", 1)
+	}*/
+	nohelp = true
 	return nil
 }
 
@@ -89,6 +130,21 @@ func main() {
 	cliInfo()
 	cliErr := app.Run(os.Args)
 	if cliErr != nil {
+		os.Exit(1)
+	}
+	if !nohelp {
+		os.Exit(0)
+	}
+	if len(mysqlconnstr) == 0 {
+		if len(confconnstr) == 0 {
+			fmt.Println("The db connection info should be set in config.yml or --with-mysql in command line")
+			os.Exit(1)
+		}
+		mysqlconnstr = confconnstr
+	}
+	seg.InitDB(mysqlconnstr)
+	if seg.Err != nil {
+		fmt.Printf("There is something wrong: %s\n", seg.Err)
 		seg.CloseDB()
 		os.Exit(1)
 	}
@@ -105,7 +161,7 @@ func main() {
 	var segResult string
 	if len(batchfile) == 0 {
 		for {
-			fmt.Println("Please type a line to be segmented:")
+			fmt.Println("Please drop a line to be segmented, or just enter to quit:")
 			reader.Scan()
 			text := reader.Text()
 			if len(text) == 0 {
@@ -113,8 +169,16 @@ func main() {
 				break
 			}
 			out = doSeg(text)
-			jret, _ := json.Marshal(out)
-			fmt.Printf("斷詞結果：%s\n", string(jret))
+			if seg.Verbose {
+				jret, _ := json.Marshal(out)
+				fmt.Printf("---Result---\n%s\n", string(jret))
+			} else {
+				segResult = strings.Join(out.SegItems, "|")
+				fmt.Printf("%s\n---Found Keywords---\n", segResult)
+				for k, v := range out.Guessed {
+					fmt.Printf("%s[%f]\n", k, v)
+				}
+			}
 		}
 	} else {
 		outfile := seg.StringJoin(batchfile, ".out")
@@ -141,20 +205,21 @@ func main() {
 
 		owfile := bufio.NewWriter(ofile)
 		scanner := bufio.NewScanner(ifile)
-		for i := 0; scanner.Scan() && i < 5000; i++ {
+		for i := 0; scanner.Scan(); i++ {
 			text := scanner.Text()
 			if len(text) == 0 {
 				continue
 			}
 			out = doSeg(text)
 			segResult = strings.Join(out.SegItems, "|")
-			fmt.Fprintf(owfile, "%s\n%s\n===\n", text, segResult)
+			fmt.Fprintf(owfile, "%s\n%s\n---\n%#v\n===\n", text, segResult, out.Guessed)
 			fmt.Printf("\r%d", i)
 			if i%100 == 0 {
 				owfile.Flush()
 			}
 		}
 		owfile.Flush()
+		fmt.Println()
 	}
 }
 
@@ -179,7 +244,7 @@ func doSeg(text string) structResult {
 	out.NumWords = 0
 	out.Guessed = make(map[string]float64)
 
-//	fmt.Println("doseg:", text)
+	//	fmt.Println("doseg:", text)
 	words := reCJKSymbol.Split(text, -1)
 	//		inp.b = len(inp.s)
 	for i := 0; i < len(words); i++ {

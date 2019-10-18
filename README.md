@@ -22,9 +22,11 @@ the install instructions for Go](http://golang.org/doc/install.html).
 
 Then the following go application should be installed first by using `go get` command:
 
+```
 github.com/spf13/viper
 github.com/urfave/cli
 github.com/go-sql-driver/mysql
+```
 
 A copy of mysql/mariaDB is required for words references. Other DBs including
 sqlite will be supported in future version.
@@ -34,7 +36,7 @@ supported as a mysql table. Please refer to the files in `db` folder about the s
 and there is a big sample collection of words abstracted in serval Taiwan EC websites.
 
 If your mysql installation is permenant, you can create `config.yml` file to meet your 
-installation. Please see config.yml.sample for reference.
+installation. Please see `config.yml.sample` for reference.
 
 ## Usage
 
@@ -44,8 +46,8 @@ $ go run chtseg
 ```
 If you do not have a correct config.yml, you may get an error to indicate how to 
 set the mysql connection string temporarily. The `-m/--with-mysql` setting will 
-overwrite the setting in config.yml. Surely you can omit -m/--with-mysql option
-if there is a correct config.yml file.
+overwrite the setting in config.yml. Surely you can omit `-m/--with-mysql` option
+if there is a correct `config.yml` file.
 
 ## Example
 
@@ -82,3 +84,10 @@ $ go run chtseg.go --with-batchfile baichain.smname
 the output will be baichain.sname.out
 
 Note: it will be an error if the output file exists
+
+Other useful option: -v will dump debug information
+
+To see help:
+```
+$ go run chtseg.go --help
+```
