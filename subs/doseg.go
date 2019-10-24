@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 /*
@@ -113,7 +114,7 @@ func Segepoch(a string) StructSegments {
 					mapGuessword[tobeGuessed] = math.Log10(float64(freq))*float64(i+1) + 1.0 //i+1 才是正確的“字“數
 					InfoOut("finding", tobeGuessed, "got freq=", freq, "SCORE =", mapGuessword[tobeGuessed])
 				} else if i == 0 {
-					mapGuessword[tobeGuessed] = 1.0
+					mapGuessword[tobeGuessed] = 0.1
 				} else {
 					mapGuessword[tobeGuessed] = 0.0
 				}
@@ -123,7 +124,7 @@ func Segepoch(a string) StructSegments {
 				currentEpoch.Score = mapGuessword[tobeGuessed]
 				currentEpoch.Wordcnt = 1
 				currentEpoch.SegSentence = tobeGuessed
-				if mapGuessword[tobeGuessed] > 1.0 {
+				if mapGuessword[tobeGuessed] > 1.0 { //有找到
 					currentEpoch.Guessedwords[tobeGuessed] = mapGuessword[tobeGuessed]
 				}
 				//	segments[wpos] = currentEpoch
@@ -139,7 +140,7 @@ func Segepoch(a string) StructSegments {
 					for k, v := range prevEpoch.Guessedwords {
 						currentEpoch.Guessedwords[k] = v
 					}
-					if mapGuessword[tobeGuessed] > 1.0 {
+					if mapGuessword[tobeGuessed] > 1.0 { //有找到
 						currentEpoch.Guessedwords[tobeGuessed] = mapGuessword[tobeGuessed]
 					}
 					//	segments = append(segments, currentEpoch)
@@ -150,7 +151,7 @@ func Segepoch(a string) StructSegments {
 						currentEpoch.Score = tempScore
 						currentEpoch.SegSentence = tobeGuessed
 						currentEpoch.Guessedwords = make(map[string]float64)
-						if mapGuessword[tobeGuessed] > 1.0 {
+						if mapGuessword[tobeGuessed] > 1.0 { //有找到
 							currentEpoch.Guessedwords[tobeGuessed] = mapGuessword[tobeGuessed]
 						}
 						//	segments = append(segments, currentEpoch)
@@ -161,7 +162,7 @@ func Segepoch(a string) StructSegments {
 					/* try to degrade wordcount effect */
 					tempScore := (prevEpoch.Score*math.Sqrt(float64(prevEpoch.Wordcnt)) + mapGuessword[tobeGuessed]) / math.Sqrt(float64(prevEpoch.Wordcnt+1))
 					InfoOut(fmt.Sprintf("P=%#v, to=%s, m=%#v\n", prevEpoch, tobeGuessed, mapGuessword[tobeGuessed]))
-					if tempScore > currentEpoch.Score {
+					if tempScore > currentEpoch.Score && mapGuessword[tobeGuessed] > 0 { //查找的詞必須要有找到或是一個字才會去比
 						currentEpoch.Wordcnt = prevEpoch.Wordcnt + 1
 						currentEpoch.Score = tempScore
 						currentEpoch.SegSentence = StringJoin(prevEpoch.SegSentence, "\t", tobeGuessed)
@@ -170,7 +171,7 @@ func Segepoch(a string) StructSegments {
 						for k, v := range prevEpoch.Guessedwords {
 							currentEpoch.Guessedwords[k] = v
 						}
-						if mapGuessword[tobeGuessed] > 1.0 {
+						if mapGuessword[tobeGuessed] > 1.0 { //有找到
 							currentEpoch.Guessedwords[tobeGuessed] = mapGuessword[tobeGuessed]
 						}
 						//	segments = append(segments, currentEpoch)

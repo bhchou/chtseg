@@ -1,10 +1,16 @@
 server:
-  port: 3306
-  type: "tcp"
-  socket:
-  ip: "127.0.0.1"
+# engine will be "mysql" or "sqlite3". 
+# for "mysql", uncomment "port", "type"(tcp/socket), "socket"(for socket file) or "ip"(for tcp) and set their value
+# for "sqlite3", uncomment "dbfile" and set corrent db file path 
+  engine: sqlite3
+#  port: 3306
+#  type: "tcp"
+#  socket:
+#  ip: "127.0.0.1"
+#  dbfile: xyz.db
 
 database:
+# the following will be ignored if engine is sqlite3
   dbname: "db"
   dbuser: "user"
   dbpassword: "password"

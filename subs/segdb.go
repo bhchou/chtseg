@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strings"
+
+	// 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type strInputs struct {
@@ -33,14 +35,18 @@ var (
 	gstmtUpdWord, gstmtUpdIgnore *sql.Stmt
 	gstrConnect                  = ""
 	// "pi:0955raspberry@tcp(127.0.0.1:3306)/cloud"
-	Verbose                      = false
-	Test                         = false
+	Verbose = false
+	Test    = false
 )
 
-func InitDB(strConnect string) {
+func InitDB(strEngine string, strConnect string) {
 	gstrConnect = strConnect
-	State, Err = prepareDB()
-	fmt.Println("MYSQL connect state, error=", State, Err)
+	State, Err = prepareDB(strEngine)
+	if Err == nil {
+		fmt.Println(strEngine, "DB connected")
+	} else {
+		fmt.Println(strEngine, "DB connect state＝", State, ", error=", Err)
+	}
 }
 
 func CloseDB() {
@@ -53,11 +59,11 @@ func CloseDB() {
 	}
 }
 
-func prepareDB() (prepareState uint, dbErr error) {
+func prepareDB(strEngine string) (prepareState uint, dbErr error) {
 
 	prepareState = 0 /* 00000 for 4 statements and db itself */
 
-	gdb, dbErr = sql.Open("mysql", gstrConnect)
+	gdb, dbErr = sql.Open(strEngine, gstrConnect)
 	if dbErr != nil {
 		return prepareState, dbErr
 	}
@@ -126,12 +132,13 @@ func ProcessWord(w string) {
 }
 
 func fnMysqlRealEscapeString(value string) string {
-	replace := map[string]string{"\\": "\\\\", "'": `\'`, "\\0": "\\\\0", "\n": "\\n", "\r": "\\r", `"`: `\"`, "\x1a": "\\Z"}
 
-	for b, a := range replace {
-		value = strings.Replace(value, b, a, -1)
-	}
+	/*	replace := map[string]string{"\\": "\\\\", "'": `\'`, "\\0": "\\\\0", "\n": "\\n", "\r": "\\r", `"`: `\"`, "\x1a": "\\Z"}
 
+		for b, a := range replace {
+			value = strings.Replace(value, b, a, -1)
+		}
+	*/
 	return value
 }
 

@@ -26,16 +26,18 @@ Then the following go application should be installed first by using `go get` co
 github.com/spf13/viper
 github.com/urfave/cli
 github.com/go-sql-driver/mysql
+github.com/mattn/go-sqlite3
 ```
+Note the `github.com/mattn/go-sqlite3` needs some other process to be installed correctly, please
+see its document in github
 
-A copy of mysql/mariaDB is required for words references. Other DBs including
-sqlite will be supported in future version.
+A copy of mysql/mariaDB or sqlite3 db file is required for words references. 
 
 Before using chtseg, a collection of Chinese words with its apperance count must be 
-supported as a mysql table. Please refer to the files in `db` folder about the schema
-and there is a big sample collection of words abstracted in serval Taiwan EC websites.
+supported as a mysql table. Please refer to the files in `db` folder about the two necessary 
+tables schema and there is a big sample collection of words abstracted in serval Taiwan EC websites.
 
-If your mysql installation is permenant, you can create `config.yml` file to meet your 
+If your mysql installation or sqlite3 db file is permenant, you can create `config.yml` file to meet your 
 installation. Please see `config.yml.sample` for reference.
 
 ## Usage

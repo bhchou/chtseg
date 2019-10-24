@@ -8,10 +8,12 @@ type Configurations struct {
 
 // ServerConfigurations exported
 type ServerConfigurations struct {
+	Engine string
 	Port   int
 	Type   string
 	Socket string
 	IP     string
+	DBFile string
 }
 
 // DatabaseConfigurations exported

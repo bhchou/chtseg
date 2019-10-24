@@ -39,7 +39,10 @@ var (
 	flags          []cli.Flag
 	batchfile      = ""
 	mysqlconnstr   = ""
+	sqliteconnstr  = ""
 	confconnstr    = ""
+	connstr        = ""
+	dbengine       = ""
 	nohelp         = false
 	cf             cnf.Configurations
 )
@@ -71,6 +74,13 @@ func init() {
 			//			Required:    true,
 			Destination: &mysqlconnstr,
 		},
+		cli.StringFlag{
+			Name:  "with-sqlite3, q",
+			Value: "",
+			Usage: "sqlite3 connect string (db file path)",
+			//			Required:    true,
+			Destination: &sqliteconnstr,
+		},
 	}
 
 	// Set the file name of the configurations file
@@ -88,7 +98,19 @@ func init() {
 	if err1 == nil {
 		err := viper.Unmarshal(&cf)
 		if err == nil {
-			confconnstr = fmt.Sprintf("%s:%s@%s(%s:%d)/%s", cf.Database.DBUser, cf.Database.DBPassword, cf.Server.Type, cf.Server.IP, cf.Server.Port, cf.Database.DBName)
+			if strings.TrimSpace(strings.ToLower(cf.Server.Engine)) == "mysql" {
+				confconnstr = fmt.Sprintf("%s:%s@%s(%s:%d)/%s",
+					strings.TrimSpace(cf.Database.DBUser),
+					strings.TrimSpace(cf.Database.DBPassword),
+					strings.TrimSpace(cf.Server.Type),
+					strings.TrimSpace(cf.Server.IP),
+					cf.Server.Port,
+					strings.TrimSpace(cf.Database.DBName))
+			} else if strings.TrimSpace(strings.ToLower(cf.Server.Engine)) == "sqlite3" {
+				confconnstr = strings.TrimSpace(cf.Server.DBFile)
+			} else {
+				confconnstr = ""
+			}
 		}
 	}
 
@@ -119,9 +141,9 @@ func cliAction(c *cli.Context) error {
 		seg.Verbose = true
 		seg.Test = true
 	}
-	/* if len(mysqlconnstr) == 0 {
-		return cli.NewExitError("db connect string not set", 1)
-	}*/
+	if len(mysqlconnstr) > 0 && len(sqliteconnstr) > 0 {
+		return cli.NewExitError("I am confused on which db engine will be used", 1)
+	}
 	nohelp = true
 	return nil
 }
@@ -135,14 +157,23 @@ func main() {
 	if !nohelp {
 		os.Exit(0)
 	}
-	if len(mysqlconnstr) == 0 {
-		if len(confconnstr) == 0 {
-			fmt.Println("The db connection info should be set in config.yml or --with-mysql in command line")
-			os.Exit(1)
-		}
-		mysqlconnstr = confconnstr
+
+	if len(mysqlconnstr) > 0 {
+		connstr = mysqlconnstr
+		dbengine = "mysql"
+	} else if len(sqliteconnstr) > 0 {
+		connstr = sqliteconnstr
+		dbengine = "sqlite3"
+	} else {
+		connstr = confconnstr
+		dbengine = cf.Server.Engine
 	}
-	seg.InitDB(mysqlconnstr)
+	if len(connstr) == 0 || !(dbengine == "mysql" || dbengine == "sqlite3") {
+		fmt.Println("The db info should be set correctly in config.yml or --with-mysql/--with-sqlite3 in command line")
+		os.Exit(1)
+	}
+
+	seg.InitDB(dbengine, connstr)
 	if seg.Err != nil {
 		fmt.Printf("There is something wrong: %s\n", seg.Err)
 		seg.CloseDB()
