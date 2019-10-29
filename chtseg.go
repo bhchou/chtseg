@@ -173,7 +173,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	seg.InitDB(dbengine, connstr)
+	seg.InitDB(dbengine, connstr, false)
 	if seg.Err != nil {
 		fmt.Printf("There is something wrong: %s\n", seg.Err)
 		seg.CloseDB()

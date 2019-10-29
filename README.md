@@ -40,6 +40,7 @@ tables schema and there is a big sample collection of words abstracted in serval
 If your mysql installation or sqlite3 db file is permenant, you can create `config.yml` file to meet your 
 installation. Please see `config.yml.sample` for reference.
 
+
 ## Usage
 
 Go to the directly you download chtseg and simply run:
@@ -80,6 +81,7 @@ The keywords are found in DB with respectively score for futhur classification r
 
 
 For batch processing:
+
 ```
 $ go run chtseg.go --with-batchfile baichain.smname
 ```
@@ -93,3 +95,7 @@ To see help:
 ```
 $ go run chtseg.go --help
 ```
+
+## API for PHP
+
+Please see README.md in `php-chtseg` directory

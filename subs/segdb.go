@@ -39,9 +39,9 @@ var (
 	Test    = false
 )
 
-func InitDB(strEngine string, strConnect string) {
+func InitDB(strEngine string, strConnect string, doPrepare bool) {
 	gstrConnect = strConnect
-	State, Err = prepareDB(strEngine)
+	State, Err = prepareDB(strEngine, doPrepare)
 	if Err == nil {
 		fmt.Println(strEngine, "DB connected")
 	} else {
@@ -56,10 +56,12 @@ func CloseDB() {
 		gstmtUpdWord.Close()
 		gstmtUpdIgnore.Close()
 		gdb.Close()
+	} else if State == 1 {
+		gdb.Close()
 	}
 }
 
-func prepareDB(strEngine string) (prepareState uint, dbErr error) {
+func prepareDB(strEngine string, doPrepare bool) (prepareState uint, dbErr error) {
 
 	prepareState = 0 /* 00000 for 4 statements and db itself */
 
@@ -68,6 +70,9 @@ func prepareDB(strEngine string) (prepareState uint, dbErr error) {
 		return prepareState, dbErr
 	}
 	prepareState |= 1
+	if !doPrepare {
+		return prepareState, dbErr
+	}
 
 	gstmtInsWord, dbErr = gdb.Prepare("INSERT INTO guess_words(prefix,guess,freq) VALUES( ?, ?, ? )")
 	if dbErr != nil {

@@ -2,3 +2,6 @@ baichain.smname
 .DS_Store
 config.yml
 baichain.smname.out
+chtseg.db
+.AppleDouble
+php-chtseg.so
