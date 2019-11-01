@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import java.io.File;
-// import ChtsegLib;
 
 
 public class jchtseg {
@@ -26,7 +25,7 @@ public class jchtseg {
 
 
     private static void returnChtseg(String db, String conn, String test) {
-        TwoStringsResult segRet = INSTANCE.Getchtseg(db, conn, test);
+        ChtsegResult segRet = INSTANCE.Getchtseg(db, conn, test);
         if ( segRet.r1.length() == 0 ) 
             System.out.println( "json result = " + segRet.r0 );
         else
@@ -34,7 +33,7 @@ public class jchtseg {
     }
 }
 
-public class TwoStringsResult extends Structure implements Structure.ByValue {
+public class ChtsegResult extends Structure implements Structure.ByValue {
     public String r0;
     public String r1;
 
@@ -45,6 +44,6 @@ public class TwoStringsResult extends Structure implements Structure.ByValue {
 
 public interface ChtsegLib extends Library {
 
-    TwoStringsResult Getchtseg(String db, String conn, String teststr);
+    ChtsegResult Getchtseg(String db, String conn, String teststr);
 
 }
