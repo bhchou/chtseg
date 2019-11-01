@@ -102,4 +102,4 @@ Please see README.md in `php-chtseg` directory
 
 ## API for Java
 
-Please see README.md in `jchtseg` directory and refer to the example .java file for example
+Please see README.md in `jchtseg` directory and refer to `jtest.java` file for example
