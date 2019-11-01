@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	// 	"strings"
-
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -34,9 +32,8 @@ var (
 	gstmtInsWord, gstmtInsIgnore *sql.Stmt
 	gstmtUpdWord, gstmtUpdIgnore *sql.Stmt
 	gstrConnect                  = ""
-	// "pi:0955raspberry@tcp(127.0.0.1:3306)/cloud"
-	Verbose = false
-	Test    = false
+	Verbose                      = false
+	Test                         = false
 )
 
 func InitDB(strEngine string, strConnect string, doPrepare bool) {

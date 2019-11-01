@@ -20,9 +20,7 @@ var (
 // IsIgnore : check if mixed Chinese stopword
 func IsIgnore(stringForTest string) bool {
 	var ( /*only for checking ignored word*/
-		//	reAlphabet    = regexp.MustCompile("^[a-zA-z]$")
 		reASCII = regexp.MustCompile(restrASCII)
-		//	reLongChinese = regexp.MustCompile("^[\u3000-\u303F\u3400-\u4DBF\u4E00-\u9FFF]{8,}$")
 		/*the following will be the most case to speedup checking*/
 		reChinese  = regexp.MustCompile(restrChinese)
 		reChinese1 = regexp.MustCompile(restrChinese1)
@@ -51,9 +49,6 @@ func IsIgnore(stringForTest string) bool {
 	case reEnglish.MatchString(stringForTest):
 		if len(Stopwords) > 0 {
 			ret, _ = regexp.MatchString("\\b"+stringForTest+"\\b", Stopwords)
-			/*			ret = true
-						} else {
-							ret = false */
 		}
 	case reASCII.MatchString(stringForTest):
 		if strings.Compare(strings.ToLower(stringForTest), "3m") == 0 || strings.Compare(strings.ToLower(stringForTest), "7-11") == 0 {

@@ -46,20 +46,13 @@ var (
 func Segepoch(a string) StructSegments {
 
 	chs := []rune(a) //input sentence seperated by space
-	/*	chpos := 0       // current referenced character
-		wpos := 0        // position to save current state, for gSegment
-		var c string */
 	var (
 		nextch      string
 		freq        uint
 		tobeGuessed string
 		current     string
-		// bestpos      int     // the best pos to combine
-		// bestscore    float64 // temperary best score
-		// chpos        = 0
-		wpos = 0
-		//		prevpos      = 0
-		segments []StructSegments
+		wpos        = 0
+		segments    []StructSegments
 	)
 	mapGuessword = make(map[string]float64)
 
@@ -99,17 +92,12 @@ func Segepoch(a string) StructSegments {
 		tobeGuessed = current
 		for i := 0; i < 7 && i <= wpos; i++ { //from current back to previous 7 stats if any
 			InfoOut("wpos=", wpos, "i=", i)
-			/*prevpos = wpos - i - 1
-			if prevpos < 0 {
-				break
-			} */
 			if i > 0 {
 				tobeGuessed = StringJoin(segments[wpos-i].Current, tobeGuessed)
 			}
 			InfoOut("Guess:", tobeGuessed)
 			if _, exist := mapGuessword[tobeGuessed]; !exist {
 				errSelect := gdb.QueryRow("select freq from guess_words where guess = ?", fnMysqlRealEscapeString(tobeGuessed)).Scan(&freq)
-				// fmt.Println("Select Error=", errSelect)
 				if errSelect == nil { //Guessed
 					mapGuessword[tobeGuessed] = math.Log10(float64(freq))*float64(i+1) + 1.0 //i+1 才是正確的“字“數
 					InfoOut("finding", tobeGuessed, "got freq=", freq, "SCORE =", mapGuessword[tobeGuessed])
@@ -119,7 +107,6 @@ func Segepoch(a string) StructSegments {
 					mapGuessword[tobeGuessed] = 0.0
 				}
 			}
-			//		fmt.Println("map", mapGuessword)
 			if wpos == 0 {
 				currentEpoch.Score = mapGuessword[tobeGuessed]
 				currentEpoch.Wordcnt = 1
@@ -127,23 +114,19 @@ func Segepoch(a string) StructSegments {
 				if mapGuessword[tobeGuessed] > 1.0 { //有找到
 					currentEpoch.Guessedwords[tobeGuessed] = mapGuessword[tobeGuessed]
 				}
-				//	segments[wpos] = currentEpoch
 			} else {
 				if i == 0 {
 					prevEpoch := segments[wpos-i-1]
-					// currentEpoch.Score = (prevEpoch.Score*float64(prevEpoch.Wordcnt) + mapGuessword[tobeGuessed]) / float64(prevEpoch.Wordcnt+1)
 					/* try to degrade wordcount effect */
 					currentEpoch.Score = (prevEpoch.Score*math.Sqrt(float64(prevEpoch.Wordcnt)) + mapGuessword[tobeGuessed]) / math.Sqrt(float64(prevEpoch.Wordcnt+1))
 					currentEpoch.Wordcnt = prevEpoch.Wordcnt + 1
 					currentEpoch.SegSentence = StringJoin(prevEpoch.SegSentence, "\t", tobeGuessed)
-					//////// copy (currentEpoch.Guessedwords, prevEpoch.Guessedwords)
 					for k, v := range prevEpoch.Guessedwords {
 						currentEpoch.Guessedwords[k] = v
 					}
 					if mapGuessword[tobeGuessed] > 1.0 { //有找到
 						currentEpoch.Guessedwords[tobeGuessed] = mapGuessword[tobeGuessed]
 					}
-					//	segments = append(segments, currentEpoch)
 				} else if wpos == i { // i 不是 0 但也沒有前面的了，代表 tobeguess 是一個字以上
 					tempScore := mapGuessword[tobeGuessed]
 					if tempScore > currentEpoch.Score {
@@ -154,11 +137,9 @@ func Segepoch(a string) StructSegments {
 						if mapGuessword[tobeGuessed] > 1.0 { //有找到
 							currentEpoch.Guessedwords[tobeGuessed] = mapGuessword[tobeGuessed]
 						}
-						//	segments = append(segments, currentEpoch)
 					}
 				} else {
 					prevEpoch := segments[wpos-i-1]
-					// tempScore := (prevEpoch.Score*float64(prevEpoch.Wordcnt) + mapGuessword[tobeGuessed]) / float64(prevEpoch.Wordcnt+1)
 					/* try to degrade wordcount effect */
 					tempScore := (prevEpoch.Score*math.Sqrt(float64(prevEpoch.Wordcnt)) + mapGuessword[tobeGuessed]) / math.Sqrt(float64(prevEpoch.Wordcnt+1))
 					InfoOut(fmt.Sprintf("P=%#v, to=%s, m=%#v\n", prevEpoch, tobeGuessed, mapGuessword[tobeGuessed]))
@@ -167,14 +148,12 @@ func Segepoch(a string) StructSegments {
 						currentEpoch.Score = tempScore
 						currentEpoch.SegSentence = StringJoin(prevEpoch.SegSentence, "\t", tobeGuessed)
 						currentEpoch.Guessedwords = make(map[string]float64)
-						//////// copy (currentEpoch.Guessedwords, prevEpoch.Guessedwords)
 						for k, v := range prevEpoch.Guessedwords {
 							currentEpoch.Guessedwords[k] = v
 						}
 						if mapGuessword[tobeGuessed] > 1.0 { //有找到
 							currentEpoch.Guessedwords[tobeGuessed] = mapGuessword[tobeGuessed]
 						}
-						//	segments = append(segments, currentEpoch)
 					}
 				}
 			}
@@ -202,10 +181,8 @@ func neednotSeg(a string) StructSegments {
 
 	if _, exist := mapGuessword[a]; !exist {
 		errSelect := gdb.QueryRow("select freq from guess_words where guess = ?", fnMysqlRealEscapeString(a)).Scan(&freq)
-		// fmt.Println("Select Error=", errSelect)
 		if errSelect == nil { //Guessed
 			mapGuessword[a] = math.Log10(float64(freq)) + 1.0
-			//			fmt.Println("finding", a, "got freq=", freq, "SCORE =", mapGuessword[a])
 		} else {
 			mapGuessword[a] = 1.0
 		}

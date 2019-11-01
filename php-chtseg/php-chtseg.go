@@ -18,7 +18,6 @@ import (
 type structResult struct {
 	OrigInput  string
 	UnsymInput string
-	//	segOutput  string
 	Score    float64
 	SegItems []string
 	NumWords uint
@@ -28,8 +27,6 @@ type structResult struct {
 var (
 	restrASCII     = "^[\x22-\x7e]+$"
 	restrCJKSymbol = "[\uFF01-\uFF5E\u3000-\u303F\u0020\u0028\u0029\u003C\u003E\u007B\u007D\\[\\]]"
-	//	app            = cli.NewApp()
-	//	flags          []cli.Flag
 	batchfile     = ""
 	mysqlconnstr  = ""
 	sqliteconnstr = ""
@@ -37,15 +34,12 @@ var (
 	connstr       = ""
 	dbengine      = ""
 	nohelp        = false
-
-//	cf             cnf.Configurations
 )
 
 type PHPseg struct {
 }
 
 func NewPHPseg() *PHPseg {
-	//	log.Println("NewPGDemo...")
 	return &PHPseg{}
 }
 
@@ -57,7 +51,6 @@ func (this *PHPseg) Getchtseg(dbtype string, dbconn string, teststr string) map[
 	if seg.Err != nil {
 		fmt.Printf("There is something wrong: %s\n", seg.Err)
 		seg.CloseDB()
-		//		os.Exit(1)
 		dir, _ := os.Getwd()
 		ret["error"] = fmt.Sprintf("DBTYPE=%s, Connection=%s, Current dir=%s, Error=%s", dbtype, dbconn, dir, seg.Err.Error())
 		return ret

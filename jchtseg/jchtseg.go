@@ -15,7 +15,6 @@ import (
 type structResult struct {
 	OrigInput  string
 	UnsymInput string
-	//	segOutput  string
 	Score    float64
 	SegItems []string
 	NumWords uint
@@ -25,8 +24,6 @@ type structResult struct {
 var (
 	restrASCII     = "^[\x22-\x7e]+$"
 	restrCJKSymbol = "[\uFF01-\uFF5E\u3000-\u303F\u0020\u0028\u0029\u003C\u003E\u007B\u007D\\[\\]]"
-	//	app            = cli.NewApp()
-	//	flags          []cli.Flag
 	batchfile     = ""
 	mysqlconnstr  = ""
 	sqliteconnstr = ""
@@ -35,8 +32,6 @@ var (
 	dbengine      = ""
 	nohelp        = false
 	mtx sync.Mutex
-
-//	cf             cnf.Configurations
 )
 
 //export Getchtseg
@@ -65,22 +60,6 @@ func Getchtseg(j_dbtype *C.char, j_dbconn *C.char, j_teststr *C.char) (ret_json,
 	rjson = string(jret)
 	return C.CString(rjson), C.CString(rerror)
 }
-
-/*
-func init() {
-
-	log.Println("run us init...")
-	rand.Seed(time.Now().UnixNano())
-
-	phpgo.InitExtension("pg0", "")
-	phpgo.RegisterInitFunctions(module_startup, module_shutdown, request_startup, request_shutdown)
-
-	
-	if true {
-		phpgo.AddClass("PHPseg", NewPHPseg)
-	}
-}
-*/
 
 func doSeg(text string) structResult {
 	var out structResult
