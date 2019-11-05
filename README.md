@@ -2,8 +2,9 @@ chtseg
 ===
 
 chtseg is a Chinese Segmation Processor built by Go language. It's based on my 1992
-master degree proposal about Chinese segmetation by using constraint satification and 
-statistics optimization. Though it depends on the collection of Chinese words and their
+master degree proposal, [Chinese segmetation by using constraint satification and 
+statistics optimization](https://hdl.handle.net/11296/zxtsf2). 
+Though it depends on the collection of Chinese words and their
 frequecies in the set of collections, it may be suitable for specific field like EC
 to abstract key words. 
 
