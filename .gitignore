@@ -10,3 +10,7 @@ jchtseg.h
 jna-5.5.0.jar
 jna.jar
 jna-platform-5.5.0.jar
+pychtseg.so
+pychtseg.h
+getudn.py
+
